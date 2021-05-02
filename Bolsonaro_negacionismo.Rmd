@@ -1,0 +1,114 @@
+---
+title: "Bolsonaro"
+author: "Victor Araújo (University of Zurich)"
+date: "02/05/2021"
+output:
+  pdf_document: default
+---
+
+
+```{r setup, include=TRUE}
+# Este documento reúne o código utilizado para a análise automatizada (Quantitative text analysis) das 200 frases negacionista proferidas pelo Presidente Jair Bolsonaro entre 26 de Janeiro de 2020 e 5 de Janeiro de 2021. 
+# O banco de dados com as frases negacionistas utilizadas na análise de texto podem ser acessadas no seguinte endereço: https://github.com/araujosvictor/Bolsonaro_discursos_200
+# A fonte original dos discursos também pode ser acessada no endereço acima.
+```
+
+
+
+```{r setup, include=TRUE}
+
+## Pacotes necessários para replicar as análise abaixo
+library(tidyverse)
+library(tidytext)
+library(wordcloud)
+```
+
+
+```{r setup, include=TRUE}
+## Fazendo o upload dos dados
+corpus <- read.csv("frases_negacionistas_bolsonaro.csv", sep =",", header = TRUE)
+
+```
+
+
+
+```{r setup, include=TRUE}
+
+## Tokenization: transformando os discursos em palavras
+## Após esse processo, cada linha do banco de dados passa a ser uma palavra (termo) presente nos discursos negacionistas
+
+  discursos_token <- corpus %>%
+  unnest_tokens(word, text)
+
+```
+
+
+
+```{r setup, include=TRUE}
+## Retirando as stopwords (artigos, preposições e/ou termos sem significado semântico claro)
+
+stopwords_pt <- c(stopwords("pt"),"é", "vai", "ser", "pode", "ter", "vou", "aqui", "lá", "alguns",
+                  "porque", "aí","nada", "agora", "falar", "grande", "fazer",
+                  "bem", "coisa", "ninguém", "pessoa", "fazer", "todos", "tudo", "vamos",                         "cara", "estar", "qualquer", "entender", "pessoal", "todo", "problema",
+                  "tá", "certo", "questão", "dessa","parte")
+stopwords_pt_df <- data.frame(word = stopwords_pt)
+```
+
+
+```{r setup, include=TRUE}
+
+### Nesta etapa, deixamos no corpus apenas os termos que não são considerados stopwords, ou seja, os termos com significado semântico.
+discursos_token <- discursos_token %>%
+  anti_join(stopwords_pt_df, by = "word")
+```
+
+
+
+
+```{r setup, include=TRUE}
+
+## Agora podemos ordernar os termos de acordo com a frequência em que aparecem no corpus (banco de dados com as frases negacionistas)
+
+discursos_token %>%
+  count(word, sort = TRUE)
+
+```
+
+
+```{r setup, include=TRUE}
+
+## Gráfico com os termos que aparecem pelo menos 10 vezes nas frases negacionistas proferidas pelo Presidente Jair Bolsonaro.
+
+discursos_token %>%
+  count(word, sort = TRUE) %>%
+  filter(n > 9) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(word, n)) +
+  geom_col() +
+  xlab(NULL) +
+  coord_flip() +
+  theme(panel.background = element_rect(fill='white', colour='gray')) +
+  ylab("N") + xlab("Termo") 
+
+
+```
+
+
+
+```{r setup, include=TRUE}
+
+### Por fim, podemos construtir uma nuvem de palavras com os 30 termos mais frequentes nas frases negacionistas proferidas pelo presidente Jair Bolsonaro.
+##
+discursos_token %>%
+  count(word, sort = TRUE) %>%
+  with(wordcloud(word, n, max.words = 30))
+
+
+
+
+```
+
+
+
+
+
